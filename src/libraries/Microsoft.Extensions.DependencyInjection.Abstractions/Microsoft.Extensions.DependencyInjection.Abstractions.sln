@@ -3,15 +3,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Extensions.Depend
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Extensions.DependencyInjection.Abstractions", "src\Microsoft.Extensions.DependencyInjection.Abstractions.csproj", "{D1AEAA98-0D46-4E23-8644-6BD5EBCE32AF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ref", "ref", "{C4483ADE-FDF5-414E-AD3F-07CBA3E49796}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ref", "ref", "{6C223AFE-B103-4A71-B946-D0C4CF0240CB}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{4CA6208B-2009-4B31-B500-641F85F0AA5E}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{992DF2B6-2074-41D7-9B9B-09FD7E7D0FA0}"
 EndProject
 Global
-	GlobalSection(NestedProjects) = preSolution
-		{B8B63EFF-64D9-49AB-ACE9-6182DADC7574} = {C4483ADE-FDF5-414E-AD3F-07CBA3E49796}
-		{D1AEAA98-0D46-4E23-8644-6BD5EBCE32AF} = {4CA6208B-2009-4B31-B500-641F85F0AA5E}
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -28,6 +24,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B8B63EFF-64D9-49AB-ACE9-6182DADC7574} = {6C223AFE-B103-4A71-B946-D0C4CF0240CB}
+		{D1AEAA98-0D46-4E23-8644-6BD5EBCE32AF} = {992DF2B6-2074-41D7-9B9B-09FD7E7D0FA0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BD3A79CE-CF84-4543-99E4-D39D56E8DAEF}
