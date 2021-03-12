@@ -6,10 +6,10 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(CommonPath)System\Threading\Tasks\TaskToApm.cs"
-         Link="Common\System\Threading\Tasks\TaskToApm.cs" />
+    <Compile Include="$(CommonPath)System\Threading\Tasks\TaskToApm.cs" Link="Common\System\Threading\Tasks\TaskToApm.cs" />
     <Compile Include="Properties\InternalsVisibleTo.cs" />
     <Compile Include="System\IO\Pipelines\BufferSegment.cs" />
+    <Compile Include="System\IO\Pipelines\BufferSegmentPool.cs" />
     <Compile Include="System\IO\Pipelines\CompletionData.cs" />
     <Compile Include="System\IO\Pipelines\FlushResult.cs" />
     <Compile Include="System\IO\Pipelines\InlineScheduler.cs" />
@@ -37,8 +37,7 @@
     <Compile Include="System\IO\Pipelines\StreamPipeWriter.cs" />
     <Compile Include="System\IO\Pipelines\StreamPipeWriterOptions.cs" />
     <Compile Include="System\IO\Pipelines\ThrowHelper.cs" />
-    <Compile Include="$(CommonPath)System\IO\StreamHelpers.CopyValidation.cs"
-             Link="Common\System\IO\StreamHelpers.CopyValidation.cs" />
+    <Compile Include="$(CommonPath)System\IO\StreamHelpers.CopyValidation.cs" Link="Common\System\IO\StreamHelpers.CopyValidation.cs" />
   </ItemGroup>
   <ItemGroup Condition="'$(TargetFramework)' != 'netstandard2.0' And !$(TargetFramework.StartsWith('net4'))">
     <Compile Include="System\IO\Pipelines\ThreadPoolScheduler.netcoreapp.cs" />
@@ -48,17 +47,16 @@
     <Compile Include="System\IO\Pipelines\ThreadPoolScheduler.netstandard.cs" />
     <Compile Include="System\IO\Pipelines\CancellationTokenExtensions.netstandard.cs" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or
-                         $(TargetFramework.StartsWith('net4'))">
+  <ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0' or&#xD;&#xA;                         $(TargetFramework.StartsWith('net4'))">
     <PackageReference Include="System.Buffers" Version="$(SystemBuffersVersion)" />
     <PackageReference Include="System.Memory" Version="$(SystemMemoryVersion)" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="$(SystemThreadingTasksExtensionsVersion)" />
     <ProjectReference Include="$(LibrariesProjectRoot)System.Runtime.CompilerServices.Unsafe\src\System.Runtime.CompilerServices.Unsafe.ilproj" />
   </ItemGroup>
-  <ItemGroup Condition="'$(TargetFramework)' == '$(NetCoreAppCurrent)' or
-                        '$(TargetFramework)' == 'netcoreapp3.0'">
+  <ItemGroup Condition="'$(TargetFramework)' == '$(NetCoreAppCurrent)' or&#xD;&#xA;                        '$(TargetFramework)' == 'netcoreapp3.0'">
     <Reference Include="System.Buffers" />
     <Reference Include="System.Collections" />
+    <Reference Include="System.Collections.Concurrent" />
     <Reference Include="System.Diagnostics.Debug" />
     <Reference Include="System.Memory" />
     <Reference Include="System.Resources.ResourceManager" />

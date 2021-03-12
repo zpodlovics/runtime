@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Buffers;
-using System.Threading;
 
 namespace System.IO.Pipelines
 {
@@ -33,16 +32,6 @@ namespace System.IO.Pipelines
             bool useSynchronizationContext = true)
         {
             MinimumSegmentSize = minimumSegmentSize == -1 ? DefaultMinimumSegmentSize : minimumSegmentSize;
-
-            // TODO: These *should* be computed based on how much users want to buffer and the minimum segment size. Today we don't have a way
-            // to let users specify the maximum buffer size, so we pick a reasonable number based on defaults. They can influence
-            // how much gets buffered by increasing the minimum segment size.
-
-            // With a defaukt segment size of 4K this maps to 16K
-            InitialSegmentPoolSize = 4;
-
-            // With a defaukt segment size of 4K this maps to 1MB. If the pipe has large segments this will be bigger than 1MB...
-            MaxSegmentPoolSize = 256;
 
             // By default, we'll throttle the writer at 64K of buffered data
             const int DefaultPauseWriterThreshold = 65536;
@@ -109,15 +98,5 @@ namespace System.IO.Pipelines
         /// Returns true if Pool is <see cref="MemoryPool{Byte}"/>.Shared
         /// </summary>
         internal bool IsDefaultSharedMemoryPool { get; }
-
-        /// <summary>
-        /// The initialize size of the segment pool
-        /// </summary>
-        internal int InitialSegmentPoolSize { get; }
-
-        /// <summary>
-        /// The maximum number of segments to pool
-        /// </summary>
-        internal int MaxSegmentPoolSize { get; }
     }
 }

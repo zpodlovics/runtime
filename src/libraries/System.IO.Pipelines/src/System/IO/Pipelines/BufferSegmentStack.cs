@@ -65,6 +65,12 @@ namespace System.IO.Pipelines
             _size++;
         }
 
+        public void Clear()
+        {
+            _array.AsSpan().Clear();
+            _size = 0;
+        }
+
         /// <summary>
         /// A simple struct we wrap reference types inside when storing in arrays to
         /// bypass the CLR's covariant checks when writing to arrays.

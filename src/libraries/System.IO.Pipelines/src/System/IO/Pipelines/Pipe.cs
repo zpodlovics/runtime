@@ -14,6 +14,12 @@ namespace System.IO.Pipelines
     /// <summary>The default <see cref="System.IO.Pipelines.PipeWriter" /> and <see cref="System.IO.Pipelines.PipeReader" /> implementation.</summary>
     public sealed partial class Pipe
     {
+        // The maximum number of segments each pipe can pool after the global pool is drained
+        private const int MaxInstanceSegmentPoolSize = 256;
+
+        // BufferSegment is about ~96K at runtime per segment, the global pool will hold onto 5MB of memory max
+        private static readonly BufferSegmentPool s_pool = new BufferSegmentPool((5 * 1024 * 1024) / 96);
+
         private static readonly Action<object?> s_signalReaderAwaitable = state => ((Pipe)state!).ReaderCancellationRequested();
         private static readonly Action<object?> s_signalWriterAwaitable = state => ((Pipe)state!).WriterCancellationRequested();
         private static readonly Action<object?> s_invokeCompletionCallbacks = state => ((PipeCompletionCallbacks)state!).Execute();
@@ -24,15 +30,15 @@ namespace System.IO.Pipelines
         private static readonly SendOrPostCallback s_syncContextExecuteWithoutExecutionContextCallback = ExecuteWithoutExecutionContext!;
         private static readonly Action<object?> s_scheduleWithExecutionContextCallback = ExecuteWithExecutionContext!;
 
-        // Mutable struct! Don't make this readonly
-        private BufferSegmentStack _bufferSegmentPool;
-
         private readonly DefaultPipeReader _reader;
         private readonly DefaultPipeWriter _writer;
 
         // The options instance
         private readonly PipeOptions _options;
         private readonly object _sync = new object();
+
+        // Mutable struct! Don't make this readonly
+        private BufferSegmentStack _bufferSegmentPool;
 
         // Computed state from the options instance
         private bool UseSynchronizationContext => _options.UseSynchronizationContext;
@@ -96,12 +102,11 @@ namespace System.IO.Pipelines
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.options);
             }
 
-            _bufferSegmentPool = new BufferSegmentStack(options.InitialSegmentPoolSize);
-
             _operationState = default;
             _readerCompletion = default;
             _writerCompletion = default;
 
+            _bufferSegmentPool = new BufferSegmentStack(0);
             _options = options;
             _readerAwaitable = new PipeAwaitable(completed: false, UseSynchronizationContext);
             _writerAwaitable = new PipeAwaitable(completed: true, UseSynchronizationContext);
@@ -120,6 +125,7 @@ namespace System.IO.Pipelines
             _lastExaminedIndex = -1;
             _unflushedBytes = 0;
             _unconsumedBytes = 0;
+            _bufferSegmentPool.Clear();
         }
 
         internal Memory<byte> GetMemory(int sizeHint)
@@ -252,7 +258,7 @@ namespace System.IO.Pipelines
                 return segment;
             }
 
-            return new BufferSegment();
+            return s_pool.Rent();
         }
 
         private void ReturnSegmentUnsynchronized(BufferSegment segment)
@@ -261,7 +267,14 @@ namespace System.IO.Pipelines
             Debug.Assert(segment != _readTail, "Returning _readTail segment that's in use!");
             Debug.Assert(segment != _writingHead, "Returning _writingHead segment that's in use!");
 
-            if (_bufferSegmentPool.Count < _options.MaxSegmentPoolSize)
+            // Try to return to the global pool
+            if (s_pool.Return(segment))
+            {
+                return;
+            }
+
+            // If that fails, try using the local pool
+            if (_bufferSegmentPool.Count < MaxInstanceSegmentPoolSize)
             {
                 _bufferSegmentPool.Push(segment);
             }
