@@ -44,12 +44,9 @@ namespace System.Net
             byte[] array = _bytes;
             _bytes = null!;
 
-            if (_usePool)
+            if (_usePool && array != null)
             {
-                if (array != null)
-                {
-                    ArrayPool<byte>.Shared.Return(array);
-                }
+                ArrayPool<byte>.Shared.Return(array);
             }
         }
 
