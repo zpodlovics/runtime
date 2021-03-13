@@ -21,7 +21,7 @@ namespace System.Net
     internal struct ArrayBuffer : IDisposable
     {
         private readonly bool _usePool;
-        private byte[] _bytes;
+        private byte[]? _bytes;
         private int _activeStart;
         private int _availableStart;
 
@@ -41,8 +41,8 @@ namespace System.Net
             _activeStart = 0;
             _availableStart = 0;
 
-            byte[] array = _bytes;
-            _bytes = null!;
+            byte[]? array = _bytes;
+            _bytes = null;
 
             if (_usePool && array != null)
             {
@@ -55,12 +55,12 @@ namespace System.Net
         public ReadOnlySpan<byte> ActiveReadOnlySpan => new ReadOnlySpan<byte>(_bytes, _activeStart, _availableStart - _activeStart);
         public Memory<byte> ActiveMemory => new Memory<byte>(_bytes, _activeStart, _availableStart - _activeStart);
 
-        public int AvailableLength => _bytes.Length - _availableStart;
+        public int AvailableLength => (_bytes?.Length ?? 0) - _availableStart;
         public Span<byte> AvailableSpan => _bytes.AsSpan(_availableStart);
         public Memory<byte> AvailableMemory => _bytes.AsMemory(_availableStart);
         public Memory<byte> AvailableMemorySliced(int length) => new Memory<byte>(_bytes, _availableStart, length);
 
-        public int Capacity => _bytes.Length;
+        public int Capacity => (_bytes?.Length ?? 0);
 
         public void Discard(int byteCount)
         {
@@ -89,7 +89,7 @@ namespace System.Net
             }
 
             int totalFree = _activeStart + AvailableLength;
-            if (byteCount <= totalFree)
+            if (_bytes != null && byteCount <= totalFree)
             {
                 // We can free up enough space by just shifting the bytes down, so do so.
                 Buffer.BlockCopy(_bytes, _activeStart, _bytes, 0, ActiveLength);
@@ -101,7 +101,7 @@ namespace System.Net
 
             // Double the size of the buffer until we have enough space.
             int desiredSize = ActiveLength + byteCount;
-            int newSize = _bytes.Length;
+            int newSize = (_bytes?.Length ?? 64);
             do
             {
                 newSize *= 2;
@@ -110,9 +110,9 @@ namespace System.Net
             byte[] newBytes = _usePool ?
                 ArrayPool<byte>.Shared.Rent(newSize) :
                 new byte[newSize];
-            byte[] oldBytes = _bytes;
+            byte[]? oldBytes = _bytes;
 
-            if (ActiveLength != 0)
+            if (oldBytes != null && ActiveLength != 0)
             {
                 Buffer.BlockCopy(oldBytes, _activeStart, newBytes, 0, ActiveLength);
             }
@@ -121,7 +121,7 @@ namespace System.Net
             _activeStart = 0;
 
             _bytes = newBytes;
-            if (_usePool)
+            if (_usePool && oldBytes != null)
             {
                 ArrayPool<byte>.Shared.Return(oldBytes);
             }
@@ -138,7 +138,7 @@ namespace System.Net
             }
 
             int totalFree = _activeStart + AvailableLength;
-            if (byteCount <= totalFree)
+            if (byteCount <= totalFree && _bytes != null)
             {
                 // We can free up enough space by just shifting the bytes down, so do so.
                 Buffer.BlockCopy(_bytes, _activeStart, _bytes, 0, ActiveLength);
@@ -148,7 +148,7 @@ namespace System.Net
                 return;
             }
 
-            if (_bytes.Length >= limit)
+            if (_bytes?.Length >= limit)
             {
                 // Already at limit, can't grow further.
                 return;
@@ -156,7 +156,7 @@ namespace System.Net
 
             // Double the size of the buffer until we have enough space, or we hit the limit
             int desiredSize = Math.Min(ActiveLength + byteCount, limit);
-            int newSize = _bytes.Length;
+            int newSize = (_bytes?.Length ?? 64);
             do
             {
                 newSize = Math.Min(newSize * 2, limit);
@@ -165,9 +165,9 @@ namespace System.Net
             byte[] newBytes = _usePool ?
                 ArrayPool<byte>.Shared.Rent(newSize) :
                 new byte[newSize];
-            byte[] oldBytes = _bytes;
+            byte[]? oldBytes = _bytes;
 
-            if (ActiveLength != 0)
+            if (ActiveLength != 0 && oldBytes != null)
             {
                 Buffer.BlockCopy(oldBytes, _activeStart, newBytes, 0, ActiveLength);
             }
@@ -176,7 +176,7 @@ namespace System.Net
             _activeStart = 0;
 
             _bytes = newBytes;
-            if (_usePool)
+            if (_usePool && oldBytes != null)
             {
                 ArrayPool<byte>.Shared.Return(oldBytes);
             }
